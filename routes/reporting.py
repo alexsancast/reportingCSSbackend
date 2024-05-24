@@ -106,10 +106,12 @@ def report_person(ced:str, start_date:datetime, end_date:datetime):
     return create_report.reportcompany(ced,start_date_format ,end_date_format,results,["Nombre", "Apellido","Fecha y hora", "Producto", "Cantidad", "Precio"],[50,35,35, 30 , 20, 25],"Reporte detallado por persona")
 #Companias
 @report_detail.get("/companies/")
-def report_person():
-    query = f"""select groupname from dba."MemberGroups" where isactive = 1;"""
+def companies():
+    query = f"""select groupname from dba."MemberGroups" where isactive = '1';"""
     cursor.execute(query)
     results = [list(row) for row in cursor.fetchall()]
+    return results
+    
     
 
 
