@@ -1,0 +1,9 @@
+name: ENV_32BIT
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - pyodbc
+  - fpdf
+  - fastapi
+  - uvicorn

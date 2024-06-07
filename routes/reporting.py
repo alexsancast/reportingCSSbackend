@@ -73,7 +73,8 @@ def report_detail_company(company_name:str , start_date:datetime, end_date:datet
     start_date_format = start_date.strftime('%b-%d-%Y')
     end_date_format = end_date.strftime('%b-%d-%Y')
     query = f"""SELECT 
-    POSHEADER.TRANSACT AS Transact , 
+    MEMBER.FIRSTNAME AS Nombre , 
+    MEMBER.LASTNAME AS Apellido , 
     CONVERT(VARCHAR, POSDETAIL.TIMEORD, 20) AS FECHA_HORA,
     PRODUCT.DESCRIPT AS Producto , 
     POSDETAIL.QUAN AS Cantidad ,
@@ -84,7 +85,7 @@ def report_detail_company(company_name:str , start_date:datetime, end_date:datet
     results = [list(row) for row in cursor.fetchall()]
 
     #Funcion para generar los reportes
-    return create_report.reportcompany(company_name,start_date_format ,end_date_format,results,["Transact", "Fecha y Hora", "Producto", "Cantidad", "Precio"],[30, 50, 50, 30, 30],"Reporte detallado por compañia")
+    return create_report.reportcompany(company_name,start_date_format ,end_date_format,results,["Nombre","Apellido" ,"Fecha_Hora", "Producto", "Cantidad", "Precio"],[40,40,40,40,20,30],"Reporte detallado por compañia")
 
 #Reporte de venta individual por persona
 @report_detail.get("/person/{ced}/{start_date}/{end_date}")
