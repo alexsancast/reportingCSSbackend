@@ -1,13 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter , HTTPException
 from datetime import datetime
-from config.db import  cursor
+from config.db import  Connection
 from config.reportpdf import Reportx
 
 
-report_detail= APIRouter()
-
-#Instanciamos el modulo de reporteria para generar los reportes
-create_report=Reportx() 
+report_detail= APIRouter()#Instanciamos el modulo de las rutas
+cursor = Connection.get_conection() #Instanciamos el la conexion a la db
+create_report=Reportx() #Instanciamos el modulo de reporteria para generar los reportes
 
  #Reporte General por compañia
 @report_detail.get("/detail_company/{company_name}/{start_date}/{end_date}")
@@ -61,11 +60,14 @@ GROUP BY
     MemberGroups.GROUPNAME, PRODUCT.DESCRIPT
 ORDER BY 
     MemberGroups.GROUPNAME;"""
-    cursor.execute(query)
-    results = [list(row) for row in cursor.fetchall()]
-
-    #Funcion para generar los reportes
-    return create_report.reportcompany("company_name",start_date_format ,end_date_format,results,["Compañia", "Servicio","Cantidad", "Total"],[60, 55, 50, 30, 30],"Reporte General")
+    try:
+        cursor.execute(query)
+        results = [list(row) for row in cursor.fetchall()]
+        if not results:
+            raise HTTPException(status_code=404, detail="No se encontraron datos registrados para esta fecha")
+        return create_report.reportcompany("company_name",start_date_format ,end_date_format,results,["Compañia", "Servicio","Cantidad", "Total"],[60, 55, 50, 30, 30],"Reporte General")
+    except:
+        return cursor
 
 #Reporte detallaldo por compañia 
 @report_detail.get("/individual_company/{company_name}/{start_date}/{end_date}")
