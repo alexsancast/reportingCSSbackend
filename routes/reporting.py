@@ -33,7 +33,14 @@ def report_general_company(company_name: str, start_date: datetime, end_date: da
         MemberGroups.GROUPNAME = '{company_name}' 
         AND POSHEADER.OPENDATE BETWEEN datetime('{start_date_format}') AND datetime('{end_date_format}')
     GROUP BY 
-        PRODUCT.DESCRIPT;
+        PRODUCT.DESCRIPT
+        ORDER BY 
+    CASE 
+        WHEN PRODUCT.DESCRIPT = 'CRED Desayuno' THEN 1
+        WHEN PRODUCT.DESCRIPT = 'CRED Almuerzo' THEN 2
+        WHEN PRODUCT.DESCRIPT = 'CRED Cena' THEN 3
+        ELSE 4
+    END
     """
     
     cursor.execute(consulta)
@@ -83,9 +90,14 @@ def report_general(start_date: datetime, end_date: datetime):
     WHERE 
         POSHEADER.OPENDATE BETWEEN datetime('{start_date_format}') AND datetime('{end_date_format}')
     GROUP BY 
-        MemberGroups.GROUPNAME, PRODUCT.DESCRIPT
-    ORDER BY 
-        MemberGroups.GROUPNAME;
+        PRODUCT.DESCRIPT
+   ORDER BY 
+    CASE 
+        WHEN PRODUCT.DESCRIPT = 'CRED Desayuno' THEN 1
+        WHEN PRODUCT.DESCRIPT = 'CRED Almuerzo' THEN 2
+        WHEN PRODUCT.DESCRIPT = 'CRED Cena' THEN 3
+        ELSE 4
+    END;
     """
     
     try:
