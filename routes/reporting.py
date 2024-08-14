@@ -10,64 +10,113 @@ create_report=Reportx() #Instanciamos el modulo de reporteria para generar los r
 
  #Reporte General por compañia
 @report_detail.get("/detail_company/{company_name}/{start_date}/{end_date}")
-def report_general_company(company_name:str,start_date :datetime, end_date:datetime):
+def report_general_company(company_name: str, start_date: datetime, end_date: datetime):
     start_date_format = start_date.strftime('%b-%d-%Y')
     end_date_format = end_date.strftime('%b-%d-%Y')
-    consulta = f"""SELECT  PRODUCT.DESCRIPT AS Tipo_Servicio, 
-                    SUM(POSDETAIL.QUAN) AS Cantidad_Servicio,
-                    SUM(POSHEADER.NETTOTAL) AS Total_Precio
-                    FROM  DBA."Member" INNER JOIN 
-                    DBA."MemberGroups" ON MEMBER.GROUPNUM = MemberGroups.GROUPNUM  
-                    INNER JOIN 
-                    DBA."POSHEADER" ON MEMBER.MEMCODE = POSHEADER.MEMCODE 
-                    INNER JOIN 
-                    DBA."POSDETAIL" ON POSHEADER.TRANSACT = POSDETAIL.TRANSACT 
-                    INNER JOIN 
-                    DBA."PRODUCT" ON POSDETAIL.PRODNUM = PRODUCT.PRODNUM
-                    WHERE 
-                    MemberGroups.GROUPNAME = '{company_name}' 
-                    AND POSHEADER.OPENDATE BETWEEN datetime('{start_date_format}') AND datetime('{end_date_format}')
-                    GROUP BY 
-                    PRODUCT.DESCRIPT;"""
+    
+    consulta = f"""
+    SELECT  
+        PRODUCT.DESCRIPT AS Tipo_Servicio, 
+        SUM(POSDETAIL.QUAN) AS Cantidad_Servicio,
+        SUM(POSHEADER.NETTOTAL) AS Total_Precio
+    FROM  
+        DBA."Member" 
+    INNER JOIN 
+        DBA."MemberGroups" ON MEMBER.GROUPNUM = MemberGroups.GROUPNUM  
+    INNER JOIN 
+        DBA."POSHEADER" ON MEMBER.MEMCODE = POSHEADER.MEMCODE 
+    INNER JOIN 
+        DBA."POSDETAIL" ON POSHEADER.TRANSACT = POSDETAIL.TRANSACT 
+    INNER JOIN 
+        DBA."PRODUCT" ON POSDETAIL.PRODNUM = PRODUCT.PRODNUM
+    WHERE 
+        MemberGroups.GROUPNAME = '{company_name}' 
+        AND POSHEADER.OPENDATE BETWEEN datetime('{start_date_format}') AND datetime('{end_date_format}')
+    GROUP BY 
+        PRODUCT.DESCRIPT;
+    """
+    
     cursor.execute(consulta)
-    results = [list(row) for row in cursor.fetchall()]
+    results = cursor.fetchall()
 
-    #Aqui llamamos la funcion para generar los reportes
-    return create_report.reportcompany(company_name,start_date_format ,end_date_format,results,["Servicio", "Cantidad", "Total"],[35, 25, 35],"Reporte general por Compañia")
+    # Formatear los resultados con comas
+    formatted_results = []
+    for row in results:
+        row = list(row)  # Convertir el resultado a una lista mutable
+        row[1] = "{:,.0f}".format(row[1])  # Formatear la cantidad con comas y sin decimales
+        row[2] = "{:,.0f}".format(row[2])  # Formatear el total con comas y sin decimales
+        formatted_results.append(row)
+
+    # Aquí llamamos la función para generar los reportes
+    return create_report.reportcompany(
+        company_name, 
+        start_date_format, 
+        end_date_format, 
+        formatted_results,  # Usar los resultados formateados
+        ["Servicio", "Cantidad", "Total"], 
+        [35, 25, 35], 
+        "Reporte general por Compañia"
+    )
+
 #Reporte General
 @report_detail.get("/general_company/{start_date}/{end_date}")
-def report_general(start_date:datetime,end_date:datetime):
+def report_general(start_date: datetime, end_date: datetime):
     start_date_format = start_date.strftime('%b-%d-%Y')
     end_date_format = end_date.strftime('%b-%d-%Y')
-    query = f""" SELECT  
-    MemberGroups.GROUPNAME AS Nombre_Compania,
-    PRODUCT.DESCRIPT AS Tipo_Servicio, 
-    SUM(POSDETAIL.QUAN) AS Cantidad_Servicio,
-    SUM(POSHEADER.NETTOTAL) AS Total_Precio
+    
+    query = f"""
+    SELECT  
+        MemberGroups.GROUPNAME AS Nombre_Compania,
+        PRODUCT.DESCRIPT AS Tipo_Servicio, 
+        SUM(POSDETAIL.QUAN) AS Cantidad_Servicio,
+        SUM(POSHEADER.NETTOTAL) AS Total_Precio
     FROM  
-    DBA."Member" 
+        DBA."Member" 
     INNER JOIN 
-    DBA."MemberGroups" ON MEMBER.GROUPNUM = MemberGroups.GROUPNUM  
+        DBA."MemberGroups" ON MEMBER.GROUPNUM = MemberGroups.GROUPNUM  
     INNER JOIN 
-    DBA."POSHEADER" ON MEMBER.MEMCODE = POSHEADER.MEMCODE 
+        DBA."POSHEADER" ON MEMBER.MEMCODE = POSHEADER.MEMCODE 
     INNER JOIN 
-    DBA."POSDETAIL" ON POSHEADER.TRANSACT = POSDETAIL.TRANSACT 
+        DBA."POSDETAIL" ON POSHEADER.TRANSACT = POSDETAIL.TRANSACT 
     INNER JOIN 
-    DBA."PRODUCT" ON POSDETAIL.PRODNUM = PRODUCT.PRODNUM
+        DBA."PRODUCT" ON POSDETAIL.PRODNUM = PRODUCT.PRODNUM
     WHERE 
-    POSHEADER.OPENDATE BETWEEN datetime('{start_date_format}') AND datetime('{end_date_format}')
-GROUP BY 
-    MemberGroups.GROUPNAME, PRODUCT.DESCRIPT
-ORDER BY 
-    MemberGroups.GROUPNAME;"""
+        POSHEADER.OPENDATE BETWEEN datetime('{start_date_format}') AND datetime('{end_date_format}')
+    GROUP BY 
+        MemberGroups.GROUPNAME, PRODUCT.DESCRIPT
+    ORDER BY 
+        MemberGroups.GROUPNAME;
+    """
+    
     try:
         cursor.execute(query)
-        results = [list(row) for row in cursor.fetchall()]
-        if not results:
+        results = cursor.fetchall()
+
+        # Formatear los resultados con comas
+        formatted_results = []
+        for row in results:
+            row = list(row)  # Convertir el resultado a una lista mutable
+            row[2] = "{:,.0f}".format(row[2])  # Formatear la cantidad con comas y sin decimales
+            row[3] = "{:,.0f}".format(row[3])  # Formatear el total con comas y sin decimales
+            formatted_results.append(row)
+
+        if not formatted_results:
+            print("Test")
             raise HTTPException(status_code=404, detail="No se encontraron datos registrados para esta fecha")
-        return create_report.reportcompany("company_name",start_date_format ,end_date_format,results,["Compañia", "Servicio","Cantidad", "Total"],[60, 55, 50, 30, 30],"Reporte General")
+
+        # Usar los resultados formateados para generar el reporte
+        return create_report.reportcompany(
+            "company_name", 
+            start_date_format, 
+            end_date_format, 
+            formatted_results,  # Usar los resultados formateados
+            ["Compañia", "Servicio", "Cantidad", "Total"], 
+            [60, 55, 50, 30, 30], 
+            "Reporte General"
+        )
     except:
         return cursor
+
 
 #Reporte detallaldo por compañia 
 @report_detail.get("/individual_company/{company_name}/{start_date}/{end_date}")
