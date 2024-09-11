@@ -72,33 +72,34 @@ def report_general(start_date: datetime, end_date: datetime):
     end_date_format = end_date.strftime('%b-%d-%Y')
     
     query = f"""
-    SELECT  
-        MemberGroups.GROUPNAME AS Nombre_Compania,
-        PRODUCT.DESCRIPT AS Tipo_Servicio, 
-        SUM(POSDETAIL.QUAN) AS Cantidad_Servicio,
-        SUM(POSHEADER.NETTOTAL) AS Total_Precio
-    FROM  
-        DBA."Member" 
-    INNER JOIN 
-        DBA."MemberGroups" ON MEMBER.GROUPNUM = MemberGroups.GROUPNUM  
-    INNER JOIN 
-        DBA."POSHEADER" ON MEMBER.MEMCODE = POSHEADER.MEMCODE 
-    INNER JOIN 
-        DBA."POSDETAIL" ON POSHEADER.TRANSACT = POSDETAIL.TRANSACT 
-    INNER JOIN 
-        DBA."PRODUCT" ON POSDETAIL.PRODNUM = PRODUCT.PRODNUM
-    WHERE 
-        POSHEADER.OPENDATE BETWEEN datetime('{start_date_format}') AND datetime('{end_date_format}')
-    GROUP BY 
-        PRODUCT.DESCRIPT
-   ORDER BY 
-    CASE 
-        WHEN PRODUCT.DESCRIPT = 'CRED Desayuno' THEN 1
-        WHEN PRODUCT.DESCRIPT = 'CRED Almuerzo' THEN 2
-        WHEN PRODUCT.DESCRIPT = 'CRED Cena' THEN 3
-        ELSE 4
-    END;
-    """
+                SELECT  
+                    MemberGroups.GROUPNAME AS Nombre_Compania,
+                    PRODUCT.DESCRIPT AS Tipo_Servicio, 
+                    SUM(POSDETAIL.QUAN) AS Cantidad_Servicio,
+                    SUM(POSHEADER.NETTOTAL) AS Total_Precio
+                FROM  
+                    DBA."Member" 
+                INNER JOIN 
+                    DBA."MemberGroups" ON MEMBER.GROUPNUM = MemberGroups.GROUPNUM  
+                INNER JOIN 
+                    DBA."POSHEADER" ON MEMBER.MEMCODE = POSHEADER.MEMCODE 
+                INNER JOIN 
+                    DBA."POSDETAIL" ON POSHEADER.TRANSACT = POSDETAIL.TRANSACT 
+                INNER JOIN 
+                    DBA."PRODUCT" ON POSDETAIL.PRODNUM = PRODUCT.PRODNUM
+                WHERE 
+                    POSHEADER.OPENDATE BETWEEN datetime('{start_date_format}') AND datetime('{end_date_format}')
+                GROUP BY 
+                    MemberGroups.GROUPNAME,
+                    PRODUCT.DESCRIPT
+                ORDER BY 
+                    CASE 
+                        WHEN PRODUCT.DESCRIPT = 'CRED Desayuno' THEN 1
+                        WHEN PRODUCT.DESCRIPT = 'CRED Almuerzo' THEN 2
+                        WHEN PRODUCT.DESCRIPT = 'CRED Cena' THEN 3
+                        ELSE 4
+                    END;
+                """
     
     try:
         cursor.execute(query)
@@ -123,7 +124,7 @@ def report_general(start_date: datetime, end_date: datetime):
             end_date_format, 
             formatted_results,  # Usar los resultados formateados
             ["Compañia", "Servicio", "Cantidad", "Total"], 
-            [60, 55, 50, 30, 30], 
+            [60, 55, 50, 30], 
             "Reporte General"
         )
     except:
